@@ -50,10 +50,16 @@ const Dashboard = () => {
 
                 const config = { headers: { Authorization: `Bearer ${token}` } };
 
-                // 1. Fetch Lifestyle Stats
-                const { data: lifestyleData } = await axios.get(`${API_URL}/api/lifestyle`, config);
-                if (lifestyleData && lifestyleData.length > 0) {
-                    const latest = lifestyleData[0];
+                // Parallel Fetching
+                const [lifestyleRes, insightRes, remindersRes] = await Promise.allSettled([
+                    axios.get(`${API_URL}/api/lifestyle`, config),
+                    axios.get(`${API_URL}/api/lifestyle/insight`, config),
+                    axios.get(`${API_URL}/api/reminders`, config)
+                ]);
+
+                // 1. Process Lifestyle Stats
+                if (lifestyleRes.status === 'fulfilled' && lifestyleRes.value.data && lifestyleRes.value.data.length > 0) {
+                    const latest = lifestyleRes.value.data[0];
                     setStats({
                         sleep: latest.sleepHours || 0,
                         water: latest.waterIntake || 0,
@@ -62,14 +68,14 @@ const Dashboard = () => {
                     });
                 }
 
-                // 2. Fetch AI Insight
-                const { data: insightData } = await axios.get(`${API_URL}/api/lifestyle/insight`, config);
-                if (insightData.insight) setInsight(insightData.insight);
+                // 2. Process AI Insight
+                if (insightRes.status === 'fulfilled' && insightRes.value.data.insight) {
+                    setInsight(insightRes.value.data.insight);
+                }
 
-                // 3. Fetch Reminders 
-                const { data: remindersData } = await axios.get(`${API_URL}/api/reminders`, config);
-                if (remindersData.length > 0) {
-                    setNextReminder(remindersData[0]);
+                // 3. Process Reminders
+                if (remindersRes.status === 'fulfilled' && remindersRes.value.data.length > 0) {
+                    setNextReminder(remindersRes.value.data[0]);
                 }
 
             } catch (error) {
