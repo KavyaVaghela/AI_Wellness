@@ -15,23 +15,10 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Explicit CORS Configuration
 app.use(cors({
     origin: (origin, callback) => {
-        const allowedOrigins = [
-            "http://localhost:5173",
-            "http://localhost:5000",
-            "https://ai-wellness-companion-tj7c.vercel.app",
-            "https://ai-wellness-companion.vercel.app",
-            "https://ai-wellness-five.vercel.app",
-            "https://ai-wellness-five.vercel.app/" // Add with trailing slash just in case
-        ];
-
-        console.log("Incoming Request Origin:", origin);
-
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.log("Blocked by CORS:", origin);
-            callback(new Error('Not allowed by CORS'));
-        }
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        // Allow any origin for now to fix the blocking issue
+        return callback(null, true);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
